@@ -39,8 +39,12 @@ function renderWebsiteList() {
 
 function addNewWebsite(website) {
   log(`Attempting to add website: ${website}`);
-  if (website && !state.blockedWebsites.includes(website)) {
-    state.blockedWebsites.push(website);
+  // Clean the website URL
+  const cleanWebsite = website
+    .replace(/^(https?:\/\/)?(www\.)?/, "")
+    .toLowerCase();
+  if (cleanWebsite && !state.blockedWebsites.includes(cleanWebsite)) {
+    state.blockedWebsites.push(cleanWebsite);
     updateState();
     newWebsite.value = "";
   }

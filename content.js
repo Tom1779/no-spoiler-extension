@@ -54,10 +54,20 @@ function processImages() {
 }
 
 function checkURL(blockedWebsites) {
-  const currentURL = window.location.hostname;
-  const isBlocked = blockedWebsites.some((website) =>
-    currentURL.includes(website)
-  );
+  const currentURL = window.location.href;
+  const currentHostname = window.location.hostname;
+
+  const isBlocked = blockedWebsites.some((website) => {
+    // Remove http://, https://, and www. from the beginning of the URL
+    const cleanWebsite = website.replace(/^(https?:\/\/)?(www\.)?/, "");
+
+    // Check if the cleaned website is at the start of the hostname or is part of the full URL
+    return (
+      currentHostname.startsWith(cleanWebsite) ||
+      currentURL.includes(cleanWebsite)
+    );
+  });
+
   log(`Current URL: ${currentURL}, Is Blocked: ${isBlocked}`);
   return isBlocked;
 }
