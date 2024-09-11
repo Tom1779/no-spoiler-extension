@@ -1,0 +1,8 @@
+.spoiler-blur {
+  filter: blur(10px);
+  transition: filter 0.1s ease-in-out;
+}
+
+.spoiler-blur:hover {
+  cursor: pointer;
+}
