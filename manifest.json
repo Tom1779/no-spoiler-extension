@@ -3,7 +3,8 @@
   "name": "Spoiler Blocker",
   "version": "1.0",
   "description": "Hide spoilers by blurring video and picture thumbnails",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
