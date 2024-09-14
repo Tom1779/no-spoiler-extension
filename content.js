@@ -2,6 +2,7 @@
 let isEnabled = false;
 let blockedWebsites = [];
 let blurAmount = 5;
+let blurVideos = false;
 
 function log(message) {
   console.log(`[Spoiler Blocker] ${message}`);
@@ -35,11 +36,30 @@ function toggleBlur(event) {
   if (element.dataset.spoilerBlurred === "true") {
     element.style.filter = "";
     element.dataset.spoilerBlurred = "false";
-    log("Image unblurred on click");
+    log(`${element.tagName} unblurred on click`);
   } else {
     element.style.filter = `blur(${blurAmount}px)`;
     element.dataset.spoilerBlurred = "true";
-    log("Image re-blurred on click");
+    log(`${element.tagName} re-blurred on click`);
+  }
+}
+
+function processElements() {
+  log("Processing elements...");
+  const images = document.querySelectorAll("img");
+  const videos = document.querySelectorAll("video");
+  log(`Found ${images.length} images and ${videos.length} videos`);
+
+  if (isEnabled && checkURL(blockedWebsites)) {
+    images.forEach(applyBlur);
+    if (blurVideos) {
+      videos.forEach(applyBlur);
+    } else {
+      videos.forEach(removeBlur);
+    }
+  } else {
+    images.forEach(removeBlur);
+    videos.forEach(removeBlur);
   }
 }
 
@@ -75,16 +95,17 @@ function checkURL(blockedWebsites) {
   return isBlocked;
 }
 
-function updateState(enabled, websites, newBlurAmount) {
+function updateState(enabled, websites, newBlurAmount, newBlurVideos) {
   isEnabled = enabled;
   blockedWebsites = websites;
   blurAmount = newBlurAmount;
+  blurVideos = newBlurVideos;
   log(
     `State updated - Enabled: ${isEnabled}, Blocked Websites: ${JSON.stringify(
       blockedWebsites
-    )}, Blur Amount: ${blurAmount}`
+    )}, Blur Amount: ${blurAmount}, Blur Videos: ${blurVideos}`
   );
-  processImages();
+  processElements();
 }
 
 function initMutationObserver() {
@@ -95,11 +116,17 @@ function initMutationObserver() {
         if (mutation.type === "childList") {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              if (node.tagName === "IMG" || node.tagName === "VIDEO") {
+              if (node.tagName === "IMG") {
+                applyBlur(node);
+              } else if (node.tagName === "VIDEO" && blurVideos) {
                 applyBlur(node);
               } else {
-                const images = node.querySelectorAll("img, video");
+                const images = node.querySelectorAll("img");
                 images.forEach(applyBlur);
+                if (blurVideos) {
+                  const videos = node.querySelectorAll("video");
+                  videos.forEach(applyBlur);
+                }
               }
             }
           });
@@ -118,9 +145,10 @@ function initializeExtension() {
     updateState(
       response.enabled,
       response.blockedWebsites,
-      response.blurAmount
+      response.blurAmount,
+      response.blurVideos
     );
-    processImages();
+    processElements();
     initMutationObserver();
   });
 }
@@ -128,12 +156,17 @@ function initializeExtension() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "stateUpdated") {
     log(`Received state update: ${JSON.stringify(request)}`);
-    updateState(request.enabled, request.blockedWebsites, request.blurAmount);
+    updateState(
+      request.enabled,
+      request.blockedWebsites,
+      request.blurAmount,
+      request.blurVideos
+    );
   }
 });
 
 // Initial processing
-processImages();
+processElements();
 
 // Add DOMContentLoaded event listener
 window.addEventListener("DOMContentLoaded", () => {

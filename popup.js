@@ -3,6 +3,7 @@ function log(message) {
 }
 
 const toggleExtension = document.getElementById("toggleExtension");
+const toggleVideoBlur = document.getElementById("toggleVideoBlur");
 const websiteList = document.getElementById("websiteList");
 const newWebsite = document.getElementById("newWebsite");
 const addWebsite = document.getElementById("addWebsite");
@@ -14,6 +15,7 @@ let state = {
   enabled: true,
   blockedWebsites: [],
   blurAmount: 5,
+  blurVideos: false,
 };
 
 function initPopup() {
@@ -22,6 +24,7 @@ function initPopup() {
     log(`Received initial state: ${JSON.stringify(response)}`);
     state = response;
     toggleExtension.checked = state.enabled;
+    toggleVideoBlur.checked = state.blurVideos;
     blurStrength.value = state.blurAmount;
     blurValue.textContent = state.blurAmount;
     renderWebsiteList();
@@ -82,6 +85,7 @@ function updateState() {
       enabled: state.enabled,
       blockedWebsites: state.blockedWebsites,
       blurAmount: state.blurAmount,
+      blurVideos: state.blurVideos,
     },
     (response) => {
       if (response.success) {
@@ -125,6 +129,12 @@ addCurrentWebsite.addEventListener("click", () => {
     const domain = url.hostname;
     addNewWebsite(domain);
   });
+});
+
+toggleVideoBlur.addEventListener("change", () => {
+  log(`Video blur toggle changed: ${toggleVideoBlur.checked}`);
+  state.blurVideos = toggleVideoBlur.checked;
+  updateState();
 });
 
 initPopup();

@@ -51,7 +51,7 @@ h1 {
 }
 
 input:checked + .slider {
-  background-color: #2196f3;
+  background-color: #f80012;
 }
 
 input:checked + .slider:before {
@@ -64,6 +64,34 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+/* New styles for smaller video toggle */
+.toggle-container .switch {
+  width: 40px;
+  height: 22px;
+}
+
+.toggle-container .slider:before {
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+}
+
+.toggle-container input:checked + .slider:before {
+  transform: translateX(18px);
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.toggle-container p {
+  margin-left: 10px;
+  font-size: 14px;
 }
 
 .slider-container {

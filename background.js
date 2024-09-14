@@ -5,6 +5,7 @@ chrome.runtime.onInstalled.addListener(() => {
       enabled: true,
       blockedWebsites: [],
       blurAmount: 5, // Default blur amount
+      blurVideos: false, // New setting for video blurring
     },
     () => {
       console.log("Extension installed with default settings");
@@ -16,12 +17,14 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getState") {
     chrome.storage.sync.get(
-      ["enabled", "blockedWebsites", "blurAmount"],
+      ["enabled", "blockedWebsites", "blurAmount", "blurVideos"],
       (result) => {
         sendResponse({
           enabled: result.enabled !== undefined ? result.enabled : true,
           blockedWebsites: result.blockedWebsites || [],
           blurAmount: result.blurAmount || 5,
+          blurVideos:
+            result.blurVideos !== undefined ? result.blurVideos : false,
         });
       }
     );
@@ -32,6 +35,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         enabled: request.enabled,
         blockedWebsites: request.blockedWebsites,
         blurAmount: request.blurAmount,
+        blurVideos: request.blurVideos,
       },
       () => {
         // Notify all tabs about the state change and refresh if necessary
@@ -56,6 +60,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     enabled: request.enabled,
                     blockedWebsites: request.blockedWebsites,
                     blurAmount: request.blurAmount,
+                    blurVideos: request.blurVideos,
                   },
                   () => {
                     if (chrome.runtime.lastError) {
@@ -80,11 +85,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function checkAndBlurImages(tabId, changeInfo, tab) {
   if (changeInfo.status === "complete" && tab.url) {
     chrome.storage.sync.get(
-      ["enabled", "blockedWebsites", "blurAmount"],
+      ["enabled", "blockedWebsites", "blurAmount", "blurVideos"],
       (result) => {
         const enabled = result.enabled !== undefined ? result.enabled : true;
         const blockedWebsites = result.blockedWebsites || [];
         const blurAmount = result.blurAmount || 5;
+        const blurVideos =
+          result.blurVideos !== undefined ? result.blurVideos : false;
 
         const url = new URL(tab.url);
         const domain = url.hostname;
@@ -97,10 +104,11 @@ function checkAndBlurImages(tabId, changeInfo, tab) {
               files: ["content-script.js"],
             })
             .then(() => {
-              // After injecting the script, send the blur amount
+              // After injecting the script, send the blur settings
               chrome.tabs.sendMessage(tabId, {
                 action: "blurImages",
                 blurAmount: blurAmount,
+                blurVideos: blurVideos,
               });
             })
             .catch((error) => {
@@ -111,6 +119,8 @@ function checkAndBlurImages(tabId, changeInfo, tab) {
     );
   }
 }
+
+// The rest of the background.js file remains the same
 
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener(checkAndBlurImages);
