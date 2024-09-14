@@ -1,33 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spoiler Blocker</title>
-  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" type="text/css" href="popup.css">
 </head>
 
 <body>
   <div class="container">
     <h1>Spoiler Blocker</h1>
+
     <label class="switch">
       <input type="checkbox" id="toggleExtension">
       <span class="slider round"></span>
     </label>
     <p>Toggle extension on/off</p>
+
+    <div class="slider-container">
+      <label for="blurStrength">Blur Strength: <span id="blurValue">5</span>px</label>
+      <input type="range" id="blurStrength" min="1" max="20" value="5">
+    </div>
+
     <div class="website-list">
       <h2>Blocked Websites</h2>
       <ul id="websiteList"></ul>
     </div>
+
     <div class="add-website">
       <input type="text" id="newWebsite" placeholder="Enter website URL">
       <button id="addWebsite">Add Website</button>
     </div>
+
     <div class="add-current-website">
       <button id="addCurrentWebsite">Block Current Website</button>
     </div>
   </div>
+
   <script src="popup.js"></script>
 </body>
 

@@ -7,10 +7,13 @@ const websiteList = document.getElementById("websiteList");
 const newWebsite = document.getElementById("newWebsite");
 const addWebsite = document.getElementById("addWebsite");
 const addCurrentWebsite = document.getElementById("addCurrentWebsite");
+const blurStrength = document.getElementById("blurStrength");
+const blurValue = document.getElementById("blurValue");
 
 let state = {
   enabled: true,
   blockedWebsites: [],
+  blurAmount: 5,
 };
 
 function initPopup() {
@@ -19,6 +22,8 @@ function initPopup() {
     log(`Received initial state: ${JSON.stringify(response)}`);
     state = response;
     toggleExtension.checked = state.enabled;
+    blurStrength.value = state.blurAmount;
+    blurValue.textContent = state.blurAmount;
     renderWebsiteList();
   });
 }
@@ -39,14 +44,27 @@ function renderWebsiteList() {
 
 function addNewWebsite(website) {
   log(`Attempting to add website: ${website}`);
-  // Clean the website URL
-  const cleanWebsite = website
-    .replace(/^(https?:\/\/)?(www\.)?/, "")
-    .toLowerCase();
-  if (cleanWebsite && !state.blockedWebsites.includes(cleanWebsite)) {
-    state.blockedWebsites.push(cleanWebsite);
-    updateState();
-    newWebsite.value = "";
+  try {
+    // Create a URL object to parse the input
+    const url = new URL(website);
+    // Get the hostname (domain) from the URL
+    const hostname = url.hostname;
+    // Remove 'www.' if present
+    const cleanWebsite = hostname.replace(/^www\./, "").toLowerCase();
+
+    if (cleanWebsite && !state.blockedWebsites.includes(cleanWebsite)) {
+      state.blockedWebsites.push(cleanWebsite);
+      updateState();
+      newWebsite.value = "";
+    }
+  } catch (error) {
+    // If URL parsing fails, try adding the input as-is
+    const cleanWebsite = website.toLowerCase();
+    if (cleanWebsite && !state.blockedWebsites.includes(cleanWebsite)) {
+      state.blockedWebsites.push(cleanWebsite);
+      updateState();
+      newWebsite.value = "";
+    }
   }
 }
 
@@ -63,6 +81,7 @@ function updateState() {
       action: "setState",
       enabled: state.enabled,
       blockedWebsites: state.blockedWebsites,
+      blurAmount: state.blurAmount,
     },
     (response) => {
       if (response.success) {
@@ -86,6 +105,13 @@ function getCurrentTab(callback) {
 toggleExtension.addEventListener("change", () => {
   log(`Toggle changed: ${toggleExtension.checked}`);
   state.enabled = toggleExtension.checked;
+  updateState();
+});
+
+blurStrength.addEventListener("input", () => {
+  log(`Blur strength changed: ${blurStrength.value}`);
+  state.blurAmount = parseInt(blurStrength.value);
+  blurValue.textContent = state.blurAmount;
   updateState();
 });
 
