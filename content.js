@@ -14,33 +14,73 @@ function applyBlur(element) {
     element.style.filter = `blur(${blurAmount}px)`;
     element.dataset.spoilerBlurred = "true";
 
-    element.removeEventListener("click", toggleBlur);
-    element.addEventListener("click", toggleBlur);
+    // Create a wrapper div
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "relative";
+    wrapper.style.display = "inline-block";
+    element.parentNode.insertBefore(wrapper, element);
+    wrapper.appendChild(element);
+
+    // Create an overlay div
+    const overlay = document.createElement("div");
+    overlay.style.position = "absolute";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.cursor = "pointer";
+    wrapper.appendChild(overlay);
+
+    // Add click event listener to the overlay
+    overlay.addEventListener("click", handleClick);
+
     log(`Blur applied to element: ${element.tagName}`);
   }
 }
 
 function removeBlur(element) {
-  element.classList.remove("spoiler-blur");
-  element.style.filter = "";
-  element.removeAttribute("data-spoiler-blurred");
-  element.removeEventListener("click", toggleBlur);
-  log(`Blur removed from element: ${element.tagName}`);
+  if (element.classList.contains("spoiler-blur")) {
+    element.classList.remove("spoiler-blur");
+    element.style.filter = "";
+    element.removeAttribute("data-spoiler-blurred");
+
+    // Remove the wrapper and overlay
+    const wrapper = element.parentNode;
+    if (wrapper && wrapper.parentNode) {
+      wrapper.parentNode.insertBefore(element, wrapper);
+      wrapper.parentNode.removeChild(wrapper);
+    }
+
+    // Remove the click event listener
+    element.removeEventListener("click", handleClick);
+
+    log(`Blur removed from element: ${element.tagName}`);
+  }
 }
 
-function toggleBlur(event) {
-  event.preventDefault();
+function handleClick(event) {
   event.stopPropagation();
-  const element = event.target;
+  const overlay = event.target;
+  const wrapper = overlay.parentNode;
+  const element = wrapper.querySelector(".spoiler-blur");
 
-  if (element.dataset.spoilerBlurred === "true") {
+  if (element) {
     element.style.filter = "";
     element.dataset.spoilerBlurred = "false";
+    overlay.style.display = "none";
     log(`${element.tagName} unblurred on click`);
-  } else {
-    element.style.filter = `blur(${blurAmount}px)`;
-    element.dataset.spoilerBlurred = "true";
-    log(`${element.tagName} re-blurred on click`);
+
+    // Add a temporary click listener to the element
+    const tempClickListener = (e) => {
+      e.stopPropagation();
+      element.style.filter = `blur(${blurAmount}px)`;
+      element.dataset.spoilerBlurred = "true";
+      overlay.style.display = "block";
+      log(`${element.tagName} re-blurred on click`);
+      element.removeEventListener("click", tempClickListener);
+    };
+
+    element.addEventListener("click", tempClickListener);
   }
 }
 
